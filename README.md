@@ -1,9 +1,9 @@
-Language HTTP [![Build Status](https://travis-ci.org/OpenFn/language-http.svg?branch=master)](https://travis-ci.org/OpenFn/language-http)
+Language SFTP [![Build Status](https://travis-ci.org/OpenFn/language-sftp.svg?branch=master)](https://travis-ci.org/OpenFn/language-sftp)
 =============
 
-Language Pack for building expressions and operations to make HTTP calls.
+Language Pack for building expressions and operations to work with SFTP servers.
 
-Documentation
+<!-- Documentation
 -------------
 ## Fetch
 
@@ -83,7 +83,7 @@ postData({
 ```
 
 [Docs](docs/index)
-
+ -->
 
 Development
 -----------
