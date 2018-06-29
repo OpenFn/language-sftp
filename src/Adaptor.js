@@ -6,6 +6,7 @@ import {
 } from 'language-common';
 import Client from 'ssh2-sftp-client';
 import csv from 'csvtojson';
+var fs = require('fs');
 
 
 /**
@@ -39,7 +40,7 @@ export function execute(...operations) {
  * @param {string} path - Path to resource
  * @returns {Operation}
  */
-export function get(filePath) {
+export function list(dirPath, encoding) {
   return (state) => {
     const sftp = new Client();
 
@@ -56,12 +57,53 @@ export function get(filePath) {
       username,
       password,
     }).then(() => {
-      return sftp.get(filePath)
-    }).then((data) => {
+      return sftp.list(dirPath);
+    }).then((list) => {
+      console.log(list)
+      composeNextState(state, json)
+    }).catch((e) => {
+      sftp.end();
+      console.log(e);
+    });
+  };
+}
+
+/**
+ * Get a file from a filepath
+ * @public
+ * @example
+ *  get("/some/path/to_file.csv")
+ * @function
+ * @param {string} path - Path to resource
+ * @returns {Operation}
+ */
+export function getCSV(filePath, encoding, parsingOptions) {
+  return (state) => {
+    const sftp = new Client();
+
+    const {
+      host,
+      username,
+      password,
+      port,
+    } = state.configuration;
+
+    return sftp.connect({
+      host,
+      port,
+      username,
+      password,
+    }).then(() => {
+      return sftp.list('/DataExport');
+    }).then((list) => {
+      console.log(list);
+      return sftp.get(filePath, null, encoding);
+    }).then((stream) => {
+      // stream.pipe(fs.createWriteStream('tmp/test.csv'));
       const arr = [];
       return new Promise((resolve, reject) => {
-        return csv()
-          .fromStream(data)
+        return csv(parsingOptions)
+          .fromStream(stream)
           .on('json', (jsonObject) => {
             arr.push(jsonObject);
           })
