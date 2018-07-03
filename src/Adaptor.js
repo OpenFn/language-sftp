@@ -34,7 +34,7 @@ export function execute(...operations) {
  * @example
  *  list("/some/path/")
  * @function
- * @param {string} path - Path to resource
+ * @param {string} dirPath - Path to resource
  * @returns {Operation}
  */
 export function list(dirPath) {
@@ -74,7 +74,7 @@ export function list(dirPath) {
  *    { delimiter: ';', noheader: true }
  *  );
  * @function
- * @param {string} path - Path to resource
+ * @param {string} filePath - Path to resource
  * @param {string} encoding - Character encoding for the csv
  * @param {string} parsingOptions - Options passed to csvtojson parser
  * @returns {Operation}
