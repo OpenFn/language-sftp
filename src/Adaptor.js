@@ -1,13 +1,10 @@
 /** @module Adaptor */
 import {
   execute as commonExecute,
-  expandReferences,
   composeNextState,
 } from 'language-common';
 import Client from 'ssh2-sftp-client';
 import csv from 'csvtojson';
-var fs = require('fs');
-
 
 /**
  * Execute a sequence of operations.
@@ -32,15 +29,15 @@ export function execute(...operations) {
 }
 
 /**
- * Get a file from a filepath
+ * List files present in a directory
  * @public
  * @example
- *  get("/some/path/to_file.csv")
+ *  list("/some/path/")
  * @function
  * @param {string} path - Path to resource
  * @returns {Operation}
  */
-export function list(dirPath, encoding) {
+export function list(dirPath) {
   return (state) => {
     const sftp = new Client();
 
@@ -58,9 +55,8 @@ export function list(dirPath, encoding) {
       password,
     }).then(() => {
       return sftp.list(dirPath);
-    }).then((list) => {
-      console.log(list)
-      composeNextState(state, json)
+    }).then((files) => {
+      console.log(files);
     }).catch((e) => {
       sftp.end();
       console.log(e);
@@ -69,12 +65,18 @@ export function list(dirPath, encoding) {
 }
 
 /**
- * Get a file from a filepath
+ * Get a CSV and convert it to JSON
  * @public
  * @example
- *  get("/some/path/to_file.csv")
+ *  get(
+ *    "/some/path/to_file.csv",
+ *    'utf8',
+ *    { delimiter: ';', noheader: true }
+ *  );
  * @function
  * @param {string} path - Path to resource
+ * @param {string} encoding - Character encoding for the csv
+ * @param {string} parsingOptions - Options passed to csvtojson parser
  * @returns {Operation}
  */
 export function getCSV(filePath, encoding, parsingOptions) {
@@ -94,25 +96,25 @@ export function getCSV(filePath, encoding, parsingOptions) {
       username,
       password,
     }).then(() => {
-      return sftp.list('/DataExport');
-    }).then((list) => {
-      console.log(list);
       return sftp.get(filePath, null, encoding);
     }).then((stream) => {
-      // stream.pipe(fs.createWriteStream('tmp/test.csv'));
+      // stream.pipe(fs.createWriteStream('tmp/file.csv'));
       const arr = [];
       return new Promise((resolve, reject) => {
         return csv(parsingOptions)
           .fromStream(stream)
           .on('json', (jsonObject) => {
-            arr.push(jsonObject);
+            if ((parsingOptions.filter
+              && jsonObject[parsingOptions.filter.key].startsWith(parsingOptions.filter.value))
+              || !parsingOptions.filter) {
+              arr.push(jsonObject);
+            }
           })
           .on('done', (error) => {
             if (error) {
               reject(error);
             }
             sftp.end();
-            console.log(arr);
             resolve(arr);
           });
       }).then(json => composeNextState(state, json));
@@ -122,6 +124,8 @@ export function getCSV(filePath, encoding, parsingOptions) {
     });
   };
 }
+
+export { _ } from 'lodash';
 
 export {
   alterState,
