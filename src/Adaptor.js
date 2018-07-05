@@ -41,26 +41,21 @@ export function list(dirPath) {
   return (state) => {
     const sftp = new Client();
 
-    const {
-      host,
-      username,
-      password,
-      port,
-    } = state.configuration;
+    // const { host, username, password, port } = state.configuration;
 
-    return sftp.connect({
-      host,
-      port,
-      username,
-      password,
-    }).then(() => {
-      return sftp.list(dirPath);
-    }).then((files) => {
-      console.log(files);
-    }).catch((e) => {
-      sftp.end();
-      console.log(e);
-    });
+    return sftp.connect(state.configuration)
+      .then(() => {
+        process.stdout.write('Connected. ✓\n');
+        return sftp.list(dirPath);
+      })
+      .then((files) => {
+        process.stdout.write(`File list: ${JSON.stringify(files, null, 2)}\n`);
+        sftp.end();
+        return state;
+      }).catch((e) => {
+        sftp.end();
+        process.stderr.write(e);
+      });
   };
 }
 
@@ -83,45 +78,45 @@ export function getCSV(filePath, encoding, parsingOptions) {
   return (state) => {
     const sftp = new Client();
 
-    const {
-      host,
-      username,
-      password,
-      port,
-    } = state.configuration;
+    // const { host, username, password, port } = state.configuration;
+    const { filter } = parsingOptions;
 
-    return sftp.connect({
-      host,
-      port,
-      username,
-      password,
-    }).then(() => {
-      return sftp.get(filePath, null, encoding);
-    }).then((stream) => {
-      // stream.pipe(fs.createWriteStream('tmp/file.csv'));
-      const arr = [];
-      return new Promise((resolve, reject) => {
-        return csv(parsingOptions)
-          .fromStream(stream)
-          .on('json', (jsonObject) => {
-            if ((parsingOptions.filter
-              && jsonObject[parsingOptions.filter.key].startsWith(parsingOptions.filter.value))
-              || !parsingOptions.filter) {
-              arr.push(jsonObject);
-            }
-          })
-          .on('done', (error) => {
-            if (error) {
-              reject(error);
-            }
-            sftp.end();
-            resolve(arr);
-          });
-      }).then(json => composeNextState(state, json));
-    }).catch((e) => {
-      sftp.end();
-      console.log(e);
-    });
+    return sftp.connect(state.configuration)
+      .then(() => {
+        process.stdout.write('Connected. ✓\n');
+        return sftp.get(filePath, null, encoding);
+      })
+      .then((stream) => {
+        process.stdout.write('Receiving stream.\n');
+        const arr = [];
+        return new Promise((resolve, reject) => {
+          process.stdout.write('Parsing rows to JSON');
+          return csv(parsingOptions)
+            .fromStream(stream)
+            .on('json', (jsonObject) => {
+              const included = (
+                (filter && jsonObject[filter.key].startsWith(filter.value))
+                || !filter
+              );
+
+              if (included) {
+                process.stdout.write('.');
+                arr.push(jsonObject);
+              }
+            })
+            .on('done', (error) => {
+              if (error) {
+                reject(error);
+              }
+              process.stdout.write('DONE. ✓\n');
+              sftp.end();
+              resolve(arr);
+            });
+        }).then(json => composeNextState(state, json));
+      }).catch((e) => {
+        sftp.end();
+        throw e;
+      });
   };
 }
 
