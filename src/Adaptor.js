@@ -136,23 +136,23 @@ export function getCSV(filePath, encoding, parsingOptions) {
  * @param {string} parsingOptions - Options passed to csvtojson parser
  * @returns {Operation}
  */
- export function putCSV(
-   return (state) => {
-
-     const json2csv = require('json2csv').parse;
-      const fields = ['field1', 'field2', 'field3'];
-      const opts = { fields };
-
-      try {
-        const csv = json2csv(myData, opts);
-        console.log(csv);
-      } catch (err) {
-        console.error(err);
-      }
-
-     sftp.put(localFilePath, remoteFilePath, [useCompression], [encoding], [addtionalOptions]);
-   }
- );
+ // export function putCSV(
+ //   return (state) => {
+ //
+ //     const json2csv = require('json2csv').parse;
+ //      const fields = ['field1', 'field2', 'field3'];
+ //      const opts = { fields };
+ //
+ //      try {
+ //        const csv = json2csv(myData, opts);
+ //        console.log(csv);
+ //      } catch (err) {
+ //        console.error(err);
+ //      }
+ //
+ //     sftp.put(localFilePath, remoteFilePath, [useCompression], [encoding], [addtionalOptions]);
+ //   }
+ // );
 
 export { _ } from 'lodash';
 
