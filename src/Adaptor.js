@@ -43,6 +43,8 @@ export function list(dirPath) {
 
     // const { host, username, password, port } = state.configuration;
 
+    // this.ftpClient['client'].on('keyboard-interactive', (name, instructions, instructionsLang, prompts, finish) => { finish([this.ftpConfig.connection.password]); })
+
     return sftp.connect(state.configuration)
       .then(() => {
         process.stdout.write('Connected. ✓\n');
@@ -54,7 +56,7 @@ export function list(dirPath) {
         return state;
       }).catch((e) => {
         sftp.end();
-        process.stderr.write(e);
+        console.log(e);
       });
   };
 }
@@ -136,23 +138,22 @@ export function getCSV(filePath, encoding, parsingOptions) {
  * @param {string} parsingOptions - Options passed to csvtojson parser
  * @returns {Operation}
  */
- // export function putCSV(
- //   return (state) => {
- //
- //     const json2csv = require('json2csv').parse;
- //      const fields = ['field1', 'field2', 'field3'];
- //      const opts = { fields };
- //
- //      try {
- //        const csv = json2csv(myData, opts);
- //        console.log(csv);
- //      } catch (err) {
- //        console.error(err);
- //      }
- //
- //     sftp.put(localFilePath, remoteFilePath, [useCompression], [encoding], [addtionalOptions]);
- //   }
- // );
+export function putCSV(filePath, options) {
+ return (state) => {
+   const json2csv = require('json2csv').parse;
+    const fields = ['field1', 'field2', 'field3'];
+    const opts = { fields };
+
+    try {
+      const csv = json2csv(myData, opts);
+      console.log(csv);
+    } catch (err) {
+      console.error(err);
+    }
+
+   sftp.put(localFilePath, remoteFilePath, [useCompression], [encoding], [addtionalOptions]);
+ }
+}
 
 export { _ } from 'lodash';
 
