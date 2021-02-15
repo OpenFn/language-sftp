@@ -2,6 +2,9 @@
 import { execute as commonExecute, composeNextState } from 'language-common';
 import Client from 'ssh2-sftp-client';
 import csv from 'csvtojson';
+import fs from 'fs';
+import path from 'path';
+import Writable from 'stream';
 
 /**
  * Execute a sequence of operations.
@@ -49,8 +52,9 @@ export function list(dirPath) {
       })
       .then(files => {
         process.stdout.write(`File list: ${JSON.stringify(files, null, 2)}\n`);
+        const nextState = composeNextState(state, files);
         sftp.end();
-        return state;
+        return nextState;
       })
       .catch(e => {
         sftp.end();
@@ -157,6 +161,70 @@ export function putCSV(filePath, options) {
       [encoding],
       [addtionalOptions]
     );
+  };
+}
+
+/**
+ * Fetch a json file from an FTP server
+ * @public
+ * @example
+ *  getJSON(
+ *    '/path/To/File',
+ *    'utf8',
+ *  );
+ * @constructor
+ * @param {string} filePath - Path to resource
+ * @param {string} encoding - Character encoding for the json
+ * @returns {Operation}
+ */
+export function getJSON(filePath, encoding) {
+  return state => {
+    const sftp = new Client();
+
+    const outStream = new Writable({
+      write(chunk, encoding, callback) {
+        callback();
+      },
+    });
+
+    return sftp
+      .connect(state.configuration)
+      .then(() => {
+        process.stdout.write('Connected. ✓\n');
+        return sftp.get(filePath);
+      })
+      .then(stream => {
+        stream.pipe(outStream);
+        let arr = [];
+        process.stdout.write('Receiving stream.\n');
+
+        return new Promise((resolve, reject) => {
+          stream
+            .on('readable', jsonObject => {
+              while (null !== (jsonObject = stream.read())) {
+                arr.push(jsonObject);
+              }
+            })
+            .on('data', jsonObject => {
+              console.log(`chunk length is: ${jsonObject.length}`);
+            })
+            .on('end', error => {
+              if (error) reject(error);
+              resolve(arr);
+            });
+        }).then(json => {
+          const nextState = composeNextState(state, json);
+          return nextState;
+        });
+      })
+      .then(state => {
+        console.log('closing connection');
+        sftp.end();
+        return state;
+      })
+      .catch(e => {
+        throw e;
+      });
   };
 }
 
