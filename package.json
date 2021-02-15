@@ -16,7 +16,7 @@
   "dependencies": {
     "csvtojson": "1.1.12",
     "json2csv": "^4.1.6",
-    "language-common": "github:openfn/language-common#v0.1.1",
+    "@openfn/language-common": "1.2.6",
     "lodash": "^4.17.15",
     "ssh2-sftp-client": "2.3.1"
   },
