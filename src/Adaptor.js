@@ -32,7 +32,7 @@ export function execute(...operations) {
  * @public
  * @example
  *  list("/some/path/")
- * @function
+ * @constructor
  * @param {string} dirPath - Path to resource
  * @returns {Operation}
  */
@@ -67,12 +67,12 @@ export function list(dirPath) {
  * Get a CSV and convert it to JSON
  * @public
  * @example
- *  get(
+ *  getCSV(
  *    "/some/path/to_file.csv",
  *    'utf8',
  *    { delimiter: ';', noheader: true }
  *  );
- * @function
+ * @constructor
  * @param {string} filePath - Path to resource
  * @param {string} encoding - Character encoding for the csv
  * @param {string} parsingOptions - Options passed to csvtojson parser
@@ -129,19 +129,18 @@ export function getCSV(filePath, encoding, parsingOptions) {
  * Convert JSON to CSV and upload to an FTP server
  * @public
  * @example
- *  put(
- *    jsonObject,
+ *  putCSV(
  *    "/some/path/to_file.csv",
  *    'utf8',
  *    { delimiter: ';', noheader: true }
  *  );
- * @function
+ * @constructor
  * @param {string} filePath - Path to resource
  * @param {string} encoding - Character encoding for the csv
  * @param {string} parsingOptions - Options passed to csvtojson parser
  * @returns {Operation}
  */
-export function putCSV(filePath, options) {
+export function putCSV(filePath, encoding, options) {
   return state => {
     const json2csv = require('json2csv').parse;
     const fields = ['field1', 'field2', 'field3'];
