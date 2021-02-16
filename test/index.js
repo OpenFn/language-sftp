@@ -1,38 +1,45 @@
-import Adaptor from '../src';
 import { expect } from 'chai';
 import nock from 'nock';
 
+import Adaptor from '../src';
 const { execute } = Adaptor;
 
-describe('The execute() function', () => {
+import { getJSON } from '../lib/Adaptor';
 
-  it('executes each operation in sequence', (done) => {
-    const state = {}
+describe('The execute() function', () => {
+  it('executes each operation in sequence', done => {
+    const state = {};
     const operations = [
-      state => { return { counter: 1 }; },
-      state => { return { counter: 2 }; },
-      state => { return { counter: 3 }; },
-    ]
+      state => {
+        return { counter: 1 };
+      },
+      state => {
+        return { counter: 2 };
+      },
+      state => {
+        return { counter: 3 };
+      },
+    ];
 
     execute(...operations)(state)
-      .then((finalState) => {
+      .then(finalState => {
         expect(finalState).to.eql({ counter: 3 });
       })
       .then(done)
       .catch(done);
   });
 
-  it('assigns references, data to the initialState', (done) => {
+  it('assigns references, data to the initialState', done => {
     let state = {};
 
     let finalState = execute()(state);
 
     execute()(state)
-      .then((finalState) => {
+      .then(finalState => {
         expect(finalState).to.eql({
           references: [],
-          data: null
-        })
+          data: null,
+        });
       })
       .then(done)
       .catch(done);
