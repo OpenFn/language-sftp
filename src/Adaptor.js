@@ -1,5 +1,5 @@
 /** @module Adaptor */
-import { execute as commonExecute, composeNextState } from 'language-common';
+import { execute as commonExecute, composeNextState } from '@openfn/language-common';
 import Client from 'ssh2-sftp-client';
 import csv from 'csvtojson';
 import fs from 'fs';
@@ -239,4 +239,4 @@ export {
   lastReferenceValue,
   merge,
   sourceValue,
-} from 'language-common';
+} from '@openfn/language-common';
