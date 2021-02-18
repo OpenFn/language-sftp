@@ -1,10 +1,11 @@
 /** @module Adaptor */
-import { execute as commonExecute, composeNextState } from '@openfn/language-common';
+import {
+  execute as commonExecute,
+  composeNextState,
+} from '@openfn/language-common';
 import Client from 'ssh2-sftp-client';
 import csv from 'csvtojson';
-import fs from 'fs';
-import path from 'path';
-import Writable from 'stream';
+import JSONStream from 'JSONStream';
 
 /**
  * Execute a sequence of operations.
@@ -180,11 +181,12 @@ export function getJSON(filePath, encoding) {
   return state => {
     const sftp = new Client();
 
-    const outStream = new Writable({
-      write(chunk, encoding, callback) {
+    /* const outStream = new Writable({
+      write: (chunk, encoding, callback) => {
+        // console.log(chunk.toString());
         callback();
       },
-    });
+    }); */
 
     return sftp
       .connect(state.configuration)
@@ -193,11 +195,14 @@ export function getJSON(filePath, encoding) {
         return sftp.get(filePath);
       })
       .then(stream => {
-        stream.pipe(outStream);
+        // stream.pipe(outStream);
+        stream.pipe(JSONStream.parse());
         let arr = [];
         process.stdout.write('Receiving stream.\n');
+        let buffer = '';
 
         return new Promise((resolve, reject) => {
+          console.log(`Reading file ${filePath}...`);
           stream
             .on('readable', jsonObject => {
               while (null !== (jsonObject = stream.read())) {
@@ -217,7 +222,7 @@ export function getJSON(filePath, encoding) {
         });
       })
       .then(state => {
-        console.log('closing connection');
+        console.log('Stream finished.');
         sftp.end();
         return state;
       })
