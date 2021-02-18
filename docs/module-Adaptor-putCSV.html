@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <title>JSDoc: Module: Adaptor</title>
+    <title>JSDoc: Class: putCSV</title>
 
     <script src="scripts/prettify/prettify.js"> </script>
     <script src="scripts/prettify/lang-css.js"> </script>
@@ -17,7 +17,7 @@
 
 <div id="main">
 
-    <h1 class="page-title">Module: Adaptor</h1>
+    <h1 class="page-title">Class: putCSV</h1>
 
     
 
@@ -28,6 +28,8 @@
 
 <header>
     
+        <h2><span class="attribs"><span class="type-signature"></span></span>
+            <span class="ancestors"><a href="module-Adaptor.html">Adaptor</a>~</span>putCSV<span class="signature">(filePath, encoding, parsingOptions)</span><span class="type-signature"> &rarr; {Operation}</span></h2>
         
     
 </header>
@@ -37,50 +39,10 @@
     
         
 
-        
-    
-    </div>
-
     
 
     
-
-    
-        <h3 class="subsection-title">Classes</h3>
-
-        <dl>
-            <dt><a href="module-Adaptor-getCSV.html">getCSV</a></dt>
-            <dd></dd>
-        
-            <dt><a href="module-Adaptor-getJSON.html">getJSON</a></dt>
-            <dd></dd>
-        
-            <dt><a href="module-Adaptor-list.html">list</a></dt>
-            <dd></dd>
-        
-            <dt><a href="module-Adaptor-putCSV.html">putCSV</a></dt>
-            <dd></dd>
-        </dl>
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-        <h3 class="subsection-title">Methods</h3>
-
-        
-            
-
-    
-
-    
-    <h4 class="name" id="~execute"><span class="type-signature">(inner) </span>execute<span class="signature">(&hellip;operations)</span><span class="type-signature"> &rarr; {Operation}</span></h4>
+    <h4 class="name" id="putCSV"><span class="type-signature"></span>new putCSV<span class="signature">(filePath, encoding, parsingOptions)</span><span class="type-signature"> &rarr; {Operation}</span></h4>
     
 
     
@@ -88,8 +50,7 @@
 
 
 <div class="description">
-    Execute a sequence of operations.
-Wraps `language-common/execute`, and prepends initial state for http.
+    Convert JSON to CSV and upload to an FTP server
 </div>
 
 
@@ -113,8 +74,6 @@ Wraps `language-common/execute`, and prepends initial state for http.
         <th>Type</th>
 
         
-        <th>Attributes</th>
-        
 
         
 
@@ -127,33 +86,69 @@ Wraps `language-common/execute`, and prepends initial state for http.
 
         <tr>
             
-                <td class="name"><code>operations</code></td>
+                <td class="name"><code>filePath</code></td>
             
 
             <td class="type">
             
                 
-<span class="param-type">Operations</span>
+<span class="param-type">string</span>
 
 
             
             </td>
 
             
-                <td class="attributes">
-                
 
-                
+            
 
+            <td class="description last">Path to resource</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>encoding</code></td>
+            
+
+            <td class="type">
+            
                 
-                    &lt;repeatable><br>
-                
-                </td>
+<span class="param-type">string</span>
+
+
+            
+            </td>
+
             
 
             
 
-            <td class="description last">Operations to be performed.</td>
+            <td class="description last">Character encoding for the csv</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>parsingOptions</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">string</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Options passed to csvtojson parser</td>
         </tr>
 
     
@@ -194,7 +189,7 @@ Wraps `language-common/execute`, and prepends initial state for http.
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Adaptor.js.html">Adaptor.js</a>, <a href="Adaptor.js.html#line104">line 104</a>
+        <a href="Adaptor.js.html">Adaptor.js</a>, <a href="Adaptor.js.html#line215">line 215</a>
     </li></ul></dd>
     
 
@@ -243,14 +238,31 @@ Wraps `language-common/execute`, and prepends initial state for http.
 
     <h5>Example</h5>
     
-    <pre class="prettyprint"><code>execute(
-  create('foo'),
-  delete('bar')
-)(state)</code></pre>
+    <pre class="prettyprint"><code>putCSV(
+   "/some/path/to_file.csv",
+   'utf8',
+   { delimiter: ';', noheader: true }
+ );</code></pre>
 
 
 
-        
+    
+    </div>
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
     
 
     
