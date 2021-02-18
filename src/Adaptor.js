@@ -199,7 +199,6 @@ export function getJSON(filePath, encoding) {
         stream.pipe(JSONStream.parse());
         let arr = [];
         process.stdout.write('Receiving stream.\n');
-        let buffer = '';
 
         return new Promise((resolve, reject) => {
           console.log(`Reading file ${filePath}...`);
@@ -210,7 +209,7 @@ export function getJSON(filePath, encoding) {
               }
             })
             .on('data', jsonObject => {
-              console.log(`chunk length is: ${jsonObject.length}`);
+              // console.log(`chunk length is: ${jsonObject.length}`);
             })
             .on('end', error => {
               if (error) reject(error);
@@ -241,6 +240,7 @@ export {
   each,
   field,
   fields,
+  http,
   lastReferenceValue,
   merge,
   sourceValue,
