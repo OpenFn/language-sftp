@@ -141,7 +141,7 @@ export function getCSV(filePath, encoding, parsingOptions) {
  * @param {string} parsingOptions - Options passed to csvtojson parser
  * @returns {Operation}
  */
-export function putCSV(filePath, encoding, options) {
+export function putCSV(filePath, encoding, parsingOptions) {
   return state => {
     const json2csv = require('json2csv').parse;
     const fields = ['field1', 'field2', 'field3'];
