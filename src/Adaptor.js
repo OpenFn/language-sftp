@@ -32,7 +32,7 @@ export function execute(...operations) {
  * List files present in a directory
  * @public
  * @example
- *  list("/some/path/")
+ * list("/some/path/")
  * @constructor
  * @param {string} dirPath - Path to resource
  * @returns {Operation}
@@ -68,11 +68,11 @@ export function list(dirPath) {
  * Get a CSV and convert it to JSON
  * @public
  * @example
- *  getCSV(
- *    "/some/path/to_file.csv",
- *    'utf8',
- *    { delimiter: ';', noheader: true }
- *  );
+ * getCSV(
+ *   "/some/path/to_file.csv",
+ *   'utf8',
+ *   { delimiter: ';', noheader: true }
+ * );
  * @constructor
  * @param {string} filePath - Path to resource
  * @param {string} encoding - Character encoding for the csv
@@ -130,11 +130,11 @@ export function getCSV(filePath, encoding, parsingOptions) {
  * Convert JSON to CSV and upload to an FTP server
  * @public
  * @example
- *  putCSV(
- *    "/some/path/to_file.csv",
- *    'utf8',
- *    { delimiter: ';', noheader: true }
- *  );
+ * putCSV(
+ *   "/some/path/to_file.csv",
+ *   'utf8',
+ *   { delimiter: ';', noheader: true }
+ * );
  * @constructor
  * @param {string} filePath - Path to resource
  * @param {string} encoding - Character encoding for the csv
@@ -168,10 +168,10 @@ export function putCSV(filePath, encoding, parsingOptions) {
  * Fetch a json file from an FTP server
  * @public
  * @example
- *  getJSON(
- *    '/path/To/File',
- *    'utf8',
- *  );
+ * getJSON(
+ *   '/path/To/File',
+ *   'utf8',
+ * );
  * @constructor
  * @param {string} filePath - Path to resource
  * @param {string} encoding - Character encoding for the json
