@@ -213,7 +213,7 @@ export function getJSON(filePath, encoding) {
             })
             .on('end', error => {
               if (error) reject(error);
-              resolve(arr);
+              resolve(arr.join(''));
             });
         }).then(json => {
           const nextState = composeNextState(state, json);
