@@ -20,9 +20,9 @@
   ],
   "dependencies": {
     "@openfn/language-common": "1.2.6",
-    "JSONStream": "^1.3.5",
-    "csvtojson": "1.1.12",
+    "csvtojson": "^2.0.10",
     "json2csv": "^4.1.6",
+    "JSONStream": "^1.3.5",
     "lodash": "^4.17.19",
     "ssh2-sftp-client": "2.3.1"
   },
@@ -34,14 +34,14 @@
     "@babel/preset-stage-0": "^7.8.3",
     "@babel/register": "^7.9.0",
     "assertion-error": "^1.0.1",
-    "eslint-plugin-import": "^2.13.0",
     "chai": "^3.4.0",
     "deep-eql": "^0.1.3",
     "eslint": "^4.19.1",
     "eslint-config-airbnb-base": "^12.1.0",
+    "eslint-plugin-import": "^2.13.0",
+    "jsdoc": "^3.6.6",
     "mocha": "^7.1.1",
     "nock": "^12.0.3",
-    "jsdoc": "^3.6.6",
     "sinon": "^1.17.2"
   }
 }

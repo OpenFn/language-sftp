@@ -90,39 +90,54 @@ export function getCSV(filePath, encoding, parsingOptions) {
       .connect(state.configuration)
       .then(() => {
         process.stdout.write('Connected. ✓\n');
-        return sftp.get(filePath, null, encoding);
+        return sftp.get(filePath);
       })
-      .then(stream => {
-        process.stdout.write('Receiving stream.\n');
-        const arr = [];
+      .then(data => {
+        process.stdout.write('Parsing rows to JSON');
+        stream.pipe(JSONStream.parse());
         return new Promise((resolve, reject) => {
-          process.stdout.write('Parsing rows to JSON');
-          return csv(parsingOptions)
-            .fromStream(stream)
-            .on('json', jsonObject => {
-              const included =
-                (filter && jsonObject[filter.key].startsWith(filter.value)) ||
-                !filter;
-
-              if (included) {
-                process.stdout.write('.');
-                arr.push(jsonObject);
-              }
-            })
-            .on('done', error => {
-              if (error) {
-                reject(error);
-              }
-              process.stdout.write('DONE. ✓\n');
-              sftp.end();
-              resolve(arr);
+          return csv()
+            .fromStream(data) // changed this from  .fromStream(data)
+            .subscribe(function (jsonObj) {
+              //single json object will be emitted for each csv line
+              // parse each json asynchronously
+              resolve();
+              console.log(jsonObj);
             });
-        }).then(json => composeNextState(state, json));
+        }).then(json => {
+          const nextState = composeNextState(state, json);
+          return nextState;
+        });
       })
       .catch(e => {
         sftp.end();
         throw e;
       });
+    // .then(stream => {
+    //   process.stdout.write('Receiving stream.\n');
+    //   const arr = [];
+    //   return new Promise((resolve, reject) => {
+    //     process.stdout.write('Parsing rows to JSON');
+    //     console.log('stream');
+    //     console.log(stream);
+    //     return csv(/* parsingOptions */)
+    //       .fromStream(stream)
+    //       .subscribe(
+    //         json => {
+    //           return new Promise((resolve, reject) => {
+    //             // long operation for each json e.g. transform / write into database.
+    //             console.log(json);
+    //           });
+    //         },
+    //         error => {
+    //           console.log('error', error);
+    //         },
+    //         success => {
+    //           console.log('success', success);
+    //         }
+    //       );
+    //   }).then(json => composeNextState(state, json));
+    // })
   };
 }
 
