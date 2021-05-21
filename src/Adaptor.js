@@ -4,8 +4,12 @@ import {
   composeNextState,
 } from '@openfn/language-common';
 import Client from 'ssh2-sftp-client';
-import csv from 'csvtojson';
+// import csv from 'csvtojson';
 import JSONStream from 'JSONStream';
+import { Transform, Readable } from 'stream';
+import Papa from 'papaparse';
+import csv from 'csv-parser';
+import fs from 'fs';
 
 /**
  * Execute a sequence of operations.
@@ -52,7 +56,7 @@ export function list(dirPath) {
         return sftp.list(dirPath);
       })
       .then(files => {
-        process.stdout.write(`File list: ${JSON.stringify(files, null, 2)}\n`);
+        // process.stdout.write(`File list: ${JSON.stringify(files, null, 2)}\n`);
         const nextState = composeNextState(state, files);
         sftp.end();
         return nextState;
@@ -85,59 +89,113 @@ export function getCSV(filePath, encoding, parsingOptions) {
 
     // const { host, username, password, port } = state.configuration;
     const { filter } = parsingOptions;
+    // Create Stream, Writable AND Readable
+    let inoutStream = new Transform({
+      transform(chunk, encoding, callback) {
+        this.push(chunk);
+        callback();
+      },
+    });
+
+    // return sftp
+    //   .connect(state.configuration)
+    //   .then(() => {
+    //     process.stdout.write('Connected. ✓\n');
+    //     return sftp.get(filePath);
+    //   })
+    //   .then(stream => {
+    //     console.log(stream);
+    //     return csv()
+    //       .fromStream(stream)
+    //       .then(json => {
+    //         return new Promise((resolve, reject) => {
+    //           console.log(json);
+    //           // long operation for each json e.g. transform / write into database.
+    //         });
+    //       });
+    //   });
 
     return sftp
       .connect(state.configuration)
       .then(() => {
         process.stdout.write('Connected. ✓\n');
-        return sftp.get(filePath);
+        inoutStream = sftp.get(filePath);
+
+        // return sftp.get(filePath);
+        console.log(inoutStream);
+        return inoutStream;
       })
-      .then(data => {
-        process.stdout.write('Parsing rows to JSON');
-        stream.pipe(JSONStream.parse());
-        return new Promise((resolve, reject) => {
-          return csv()
-            .fromStream(data) // changed this from  .fromStream(data)
-            .subscribe(function (jsonObj) {
-              //single json object will be emitted for each csv line
-              // parse each json asynchronously
-              resolve();
-              console.log(jsonObj);
-            });
-        }).then(json => {
-          const nextState = composeNextState(state, json);
-          return nextState;
+      .then(stream => {
+        process.stdout.write('Parsing rows to JSON.\n');
+        let result = undefined;
+        let readStream = new Readable({
+          objectMode: true,
+          read() {},
         });
+        readStream.pipe(stream);
+        // readStream.pipe(JSONStream.parse());
+        // console.log(stream);
+        return new Promise((resolve, reject) => {
+          readStream
+            .pipe(csv())
+            .on('readable', jsonObject => {
+              console.log(jsonObject);
+              // while (null !== (jsonObject = stream.read())) {
+              //   arr.push(jsonObject);
+              // }
+            })
+            .on('data', row => {
+              console.log(row);
+              result.push(row);
+            })
+            .on('end', () => {
+              console.log('end');
+            });
+          // const result = Papa.parse(stream, { header: true }).data;
+          console.log('result', result);
+          resolve(result);
+        }).then(json => {
+          console.log('json', json);
+          // const nextState = composeNextState(state, json);
+          return json;
+        });
+      })
+      .then(state => {
+        console.log('Stream finished.');
+        sftp.end();
+        return state;
       })
       .catch(e => {
         sftp.end();
         throw e;
       });
-    // .then(stream => {
-    //   process.stdout.write('Receiving stream.\n');
-    //   const arr = [];
-    //   return new Promise((resolve, reject) => {
-    //     process.stdout.write('Parsing rows to JSON');
-    //     console.log('stream');
-    //     console.log(stream);
-    //     return csv(/* parsingOptions */)
-    //       .fromStream(stream)
-    //       .subscribe(
-    //         json => {
-    //           return new Promise((resolve, reject) => {
-    //             // long operation for each json e.g. transform / write into database.
-    //             console.log(json);
-    //           });
-    //         },
-    //         error => {
-    //           console.log('error', error);
-    //         },
-    //         success => {
-    //           console.log('success', success);
-    //         }
-    //       );
-    //   }).then(json => composeNextState(state, json));
-    // })
+
+    // return sftp
+    //   .connect(state.configuration)
+    //   .then(() => {
+    //     process.stdout.write('Connected. ✓\n');
+    //     return sftp.get(filePath);
+    //   })
+    //   .then(stream => {
+    //     process.stdout.write('Parsing rows to JSON.\n');
+    //     return new Promise((resolve, reject) => {
+    //       const result = Papa.parse(stream, { header: true }).data;
+    //       console.log('result', result);
+    //       resolve(result);
+    //     }).then(json => {
+    //       const nextState = composeNextState(state, json);
+    //       return nextState;
+    //     });
+    //   })
+    //   .then(state => {
+    //     console.log('Stream finished.');
+    //     sftp.end();
+    //     return state;
+    //   })
+    //   .catch(e => {
+    //     sftp.end();
+    //     throw e;
+    //   });
   };
 }
 
