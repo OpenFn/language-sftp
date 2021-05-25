@@ -4,8 +4,9 @@ import {
   composeNextState,
 } from '@openfn/language-common';
 import Client from 'ssh2-sftp-client';
-import csv from 'csvtojson';
+// import csv from 'csvtojson';
 import JSONStream from 'JSONStream';
+import csv from 'csv-parser';
 
 /**
  * Execute a sequence of operations.
@@ -52,7 +53,7 @@ export function list(dirPath) {
         return sftp.list(dirPath);
       })
       .then(files => {
-        process.stdout.write(`File list: ${JSON.stringify(files, null, 2)}\n`);
+        // process.stdout.write(`File list: ${JSON.stringify(files, null, 2)}\n`);
         const nextState = composeNextState(state, files);
         sftp.end();
         return nextState;
@@ -69,55 +70,50 @@ export function list(dirPath) {
  * @public
  * @example
  * getCSV(
- *   "/some/path/to_file.csv",
- *   'utf8',
- *   { delimiter: ';', noheader: true }
+ *   "/some/path/to_file.csv"
  * );
  * @constructor
  * @param {string} filePath - Path to resource
- * @param {string} encoding - Character encoding for the csv
- * @param {string} parsingOptions - Options passed to csvtojson parser
  * @returns {Operation}
  */
-export function getCSV(filePath, encoding, parsingOptions) {
+export function getCSV(filePath) {
   return state => {
     const sftp = new Client();
-
-    // const { host, username, password, port } = state.configuration;
-    const { filter } = parsingOptions;
 
     return sftp
       .connect(state.configuration)
       .then(() => {
         process.stdout.write('Connected. ✓\n');
-        return sftp.get(filePath, null, encoding);
+        return sftp.get(filePath);
       })
       .then(stream => {
-        process.stdout.write('Receiving stream.\n');
-        const arr = [];
-        return new Promise((resolve, reject) => {
-          process.stdout.write('Parsing rows to JSON');
-          return csv(parsingOptions)
-            .fromStream(stream)
-            .on('json', jsonObject => {
-              const included =
-                (filter && jsonObject[filter.key].startsWith(filter.value)) ||
-                !filter;
+        process.stdout.write('Parsing rows to JSON.\n');
+        let results = [];
+        stream.pipe(csv());
 
-              if (included) {
-                process.stdout.write('.');
-                arr.push(jsonObject);
-              }
+        return new Promise((resolve, reject) => {
+          stream
+            .on('readable', jsonObject => {
+              // while (null !== (jsonObject = stream.read())) {
+              //   results.push(jsonObject);
+              // }
+              stream.read();
             })
-            .on('done', error => {
-              if (error) {
-                reject(error);
-              }
-              process.stdout.write('DONE. ✓\n');
-              sftp.end();
-              resolve(arr);
+            .on('data', data => {
+              results.push(data);
+            })
+            .on('end', () => {
+              resolve(results.join('').split('\r\n'));
             });
-        }).then(json => composeNextState(state, json));
+        }).then(json => {
+          const nextState = composeNextState(state, json);
+          return nextState;
+        });
+      })
+      .then(state => {
+        console.log('Stream finished.');
+        sftp.end();
+        return state;
       })
       .catch(e => {
         sftp.end();
