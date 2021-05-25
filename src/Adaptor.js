@@ -4,12 +4,9 @@ import {
   composeNextState,
 } from '@openfn/language-common';
 import Client from 'ssh2-sftp-client';
-import csv from 'csvtojson';
+// import csv from 'csvtojson';
 import JSONStream from 'JSONStream';
-import { Transform, Readable } from 'stream';
-import Papa from 'papaparse';
-// import csv from 'csv-parser';
-import fs from 'fs';
+import csv from 'csv-parser';
 
 /**
  * Execute a sequence of operations.
@@ -73,14 +70,10 @@ export function list(dirPath) {
  * @public
  * @example
  * getCSV(
- *   "/some/path/to_file.csv",
- *   'utf8',
- *   { delimiter: ';', noheader: true }
+ *   "/some/path/to_file.csv"
  * );
  * @constructor
  * @param {string} filePath - Path to resource
- * @param {string} encoding - Character encoding for the csv
- * @param {string} parsingOptions - Options passed to csvtojson parser
  * @returns {Operation}
  */
 export function getCSV(filePath) {
