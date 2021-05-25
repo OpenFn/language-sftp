@@ -9,14 +9,18 @@
   },
   "main": "lib/index.js",
   "scripts": {
-    "build": "make",
+    "build": "node_modules/.bin/babel src -d lib && npm run ast",
     "test": "mocha --require @babel/register",
-    "test:watch": "mocha -w --require @babel/register"
+    "test:watch": "mocha -w --require @babel/register",
+    "ast": "simple-ast --adaptor ./src/Adaptor.js --output ast.json",
+    "postversion": "git push && git push --tags",
+    "version": "npm run build && git add -A lib ast.json"
   },
   "author": "Open Function Group",
   "license": "LGPLv3",
   "files": [
-    "lib/"
+    "lib/",
+    "ast.json"
   ],
   "dependencies": {
     "@openfn/language-common": "1.2.6",
@@ -45,5 +49,17 @@
     "mocha": "^7.1.1",
     "nock": "^12.0.3",
     "sinon": "^1.17.2"
-  }
+  },
+  "directories": {
+    "lib": "./lib"
+  },
+  "bundledDependencies": [
+    "@openfn/language-common",
+    "csv-parser",
+    "csvtojson",
+    "json2csv",
+    "JSONStream",
+    "lodash",
+    "ssh2-sftp-client"
+  ]
 }
