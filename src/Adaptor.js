@@ -4,11 +4,11 @@ import {
   composeNextState,
 } from '@openfn/language-common';
 import Client from 'ssh2-sftp-client';
-// import csv from 'csvtojson';
+import csv from 'csvtojson';
 import JSONStream from 'JSONStream';
 import { Transform, Readable } from 'stream';
 import Papa from 'papaparse';
-import csv from 'csv-parser';
+// import csv from 'csv-parser';
 import fs from 'fs';
 
 /**
@@ -83,81 +83,38 @@ export function list(dirPath) {
  * @param {string} parsingOptions - Options passed to csvtojson parser
  * @returns {Operation}
  */
-export function getCSV(filePath, encoding, parsingOptions) {
+export function getCSV(filePath) {
   return state => {
     const sftp = new Client();
-
-    // const { host, username, password, port } = state.configuration;
-    const { filter } = parsingOptions;
-    // Create Stream, Writable AND Readable
-    let inoutStream = new Transform({
-      transform(chunk, encoding, callback) {
-        this.push(chunk);
-        callback();
-      },
-    });
-
-    // return sftp
-    //   .connect(state.configuration)
-    //   .then(() => {
-    //     process.stdout.write('Connected. ✓\n');
-    //     return sftp.get(filePath);
-    //   })
-    //   .then(stream => {
-    //     console.log(stream);
-    //     return csv()
-    //       .fromStream(stream)
-    //       .then(json => {
-    //         return new Promise((resolve, reject) => {
-    //           console.log(json);
-    //           // long operation for each json e.g. transform / write into database.
-    //         });
-    //       });
-    //   });
 
     return sftp
       .connect(state.configuration)
       .then(() => {
         process.stdout.write('Connected. ✓\n');
-        inoutStream = sftp.get(filePath);
-
-        // return sftp.get(filePath);
-        console.log(inoutStream);
-        return inoutStream;
+        return sftp.get(filePath);
       })
       .then(stream => {
         process.stdout.write('Parsing rows to JSON.\n');
-        let result = undefined;
-        let readStream = new Readable({
-          objectMode: true,
-          read() {},
-        });
-        readStream.pipe(stream);
-        // readStream.pipe(JSONStream.parse());
-        // console.log(stream);
+        let results = [];
+        stream.pipe(csv());
+
         return new Promise((resolve, reject) => {
-          readStream
-            .pipe(csv())
+          stream
             .on('readable', jsonObject => {
-              console.log(jsonObject);
               // while (null !== (jsonObject = stream.read())) {
-              //   arr.push(jsonObject);
+              //   results.push(jsonObject);
               // }
+              stream.read();
             })
-            .on('data', row => {
-              console.log(row);
-              result.push(row);
+            .on('data', data => {
+              results.push(data);
             })
             .on('end', () => {
-              console.log('end');
+              resolve(results.join('').split('\r\n'));
             });
-          // const result = Papa.parse(stream, { header: true }).data;
-          console.log('result', result);
-          resolve(result);
         }).then(json => {
-          console.log('json', json);
-          // const nextState = composeNextState(state, json);
-          return json;
+          const nextState = composeNextState(state, json);
+          return nextState;
         });
       })
       .then(state => {
@@ -169,33 +126,6 @@ export function getCSV(filePath, encoding, parsingOptions) {
         sftp.end();
         throw e;
       });
-
-    // return sftp
-    //   .connect(state.configuration)
-    //   .then(() => {
-    //     process.stdout.write('Connected. ✓\n');
-    //     return sftp.get(filePath);
-    //   })
-    //   .then(stream => {
-    //     process.stdout.write('Parsing rows to JSON.\n');
-    //     return new Promise((resolve, reject) => {
-    //       const result = Papa.parse(stream, { header: true }).data;
-    //       console.log('result', result);
-    //       resolve(result);
-    //     }).then(json => {
-    //       const nextState = composeNextState(state, json);
-    //       return nextState;
-    //     });
-    //   })
-    //   .then(state => {
-    //     console.log('Stream finished.');
-    //     sftp.end();
-    //     return state;
-    //   })
-    //   .catch(e => {
-    //     sftp.end();
-    //     throw e;
-    //   });
   };
 }
 
