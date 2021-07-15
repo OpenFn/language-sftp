@@ -42,10 +42,6 @@ export function list(dirPath) {
   return state => {
     const sftp = new Client();
 
-    // const { host, username, password, port } = state.configuration;
-
-    // this.ftpClient['client'].on('keyboard-interactive', (name, instructions, instructionsLang, prompts, finish) => { finish([this.ftpConfig.connection.password]); })
-
     return sftp
       .connect(state.configuration)
       .then(() => {
