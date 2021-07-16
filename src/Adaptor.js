@@ -227,6 +227,7 @@ export { _ } from 'lodash';
 
 export {
   alterState,
+  fn,
   dataPath,
   dataValue,
   each,
