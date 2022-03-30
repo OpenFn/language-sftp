@@ -70,6 +70,94 @@ alterState(state => {
     });
 });
 ```
+```
+fn(state => {
+  return list('/')(state).then(state => {
+    const targetNames = [
+      'exportContacts', //example fileName
+    ];
+    console.log(`Fetching files: ${targetNames}`);
+    const files = state.data
+      .filter(file => file.name.split('.')[1] === 'csv')
+      .filter(file =>
+        targetNames.some(targetName =>
+          file.name.toLowerCase().includes(targetName)
+        )
+      );
+
+    if (files.length === 0) console.log('No new CSV files found.');
+    return { ...state, data: {}, files };
+  });
+});
+
+each(
+  '$.files[*]',
+  fn(state => {
+    const { configuration, data } = state;
+
+    return getCSV(`/${data.name}`)(state).then(async state => {
+      const headers = state.data
+        .shift()
+        .split(';')
+        .map(h => (h = h.replace(/"/g, '')));
+
+      function toObject(item) {
+        const values = item.split(';');
+
+        return Object.fromEntries(
+          headers.map((k, i) => {
+            return values[i]
+              ? [k, values[i].replace(/"/g, '')]
+              : [k, values[i]];
+          })
+        );
+      }
+
+      let countInbox = 0;
+
+      //to post CSV data as individual Messages to OpenFn Inbox
+      const postToInbox = async data => {
+        countInbox++;
+
+        console.log(`Sending request ${countInbox} to inbox`);
+
+        await new Promise(resolve => setTimeout(resolve, 200));
+
+        await http.post({
+          url: configuration.openfnInboxUrl,
+          data: data,
+          maxContentLength: Infinity,
+          maxBodyLength: Infinity,
+        })(state);
+      };
+
+      //To split up into multiple, smaller payloads before send to OpenFn Inbox
+      const chunkSize = 500;
+
+      console.log(
+        state.data.length,
+        'rows will be sent in',
+        Math.ceil(state.data.length / chunkSize),
+        'requests of',
+        chunkSize,
+        'rows each.'
+      );
+
+      while (state.data.length > 0) {
+        console.log('data.length', state.data.length);
+        await postToInbox({ 
+          fileName: data.name,
+          fileType: data.name.split('-')[0],
+          uploadDate: new Date(data.modifyTime).toISOString(),
+          json: state.data.splice(0, chunkSize).map(toObject),
+        });
+      }
+
+      return { configuration, references: [], data: {} };
+    });
+  })
+);
+```
 
 [Docs](docs/index)
 
