@@ -41,7 +41,7 @@ getCSV('path/to/file.csv', 'utf8', {
 });
 ```
 A more complex example that breaks up the CSV file into multiple payloads for quicker processing. 
-```
+```js
 fn(state => {
   return list('/')(state).then(state => {
     const targetNames = [
