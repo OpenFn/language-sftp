@@ -4,7 +4,7 @@ import {
   composeNextState,
 } from '@openfn/language-common';
 import Client from 'ssh2-sftp-client';
-// import csv from 'csvtojson';
+import csv from 'csvtojson';
 import JSONStream from 'JSONStream';
 // import csv from 'csv-parser';
 
@@ -218,15 +218,24 @@ export function getJSON(filePath, encoding) {
  * Convert JSON array of strings into a normalized object
  * @public
  * @example
- * normalizeCSVarray([array],{ delimiter: ';', noheader: true });
+ * normalizeCSVarray([csvStr],{ delimiter: ';', noheader: true });
  * @constructor
- * @param {array} array - Array of strings
+ * @param {array} csvStr - Array of strings
  * @param {options} options - Options passed to csvtojson parser
  * @param {callback} callback - Options passed to csvtojson parser
  * @returns {Operation}
  */
-export function normalizeCSVarray(array, options, callback) {
-  return state => {};
+export function normalizeCSVarray(csvStr, options, callback) {
+  return state => {
+    csv({
+      noheader: true,
+      output: 'csv',
+    })
+      .fromString(csvStr)
+      .then(csvRow => {
+        console.log(csvRow); // => [["1","2","3"], ["4","5","6"], ["7","8","9"]]
+      });
+  };
 }
 
 export { _ } from 'lodash';

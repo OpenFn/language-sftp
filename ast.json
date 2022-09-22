@@ -209,7 +209,7 @@
     {
       "name": "normalizeCSVarray",
       "params": [
-        "array",
+        "csvStr",
         "options",
         "callback"
       ],
@@ -223,7 +223,7 @@
           },
           {
             "title": "example",
-            "description": "normalizeCSVarray([array],{ delimiter: ';', noheader: true });"
+            "description": "normalizeCSVarray([csvStr],{ delimiter: ';', noheader: true });"
           },
           {
             "title": "constructor",
@@ -238,7 +238,7 @@
               "type": "NameExpression",
               "name": "array"
             },
-            "name": "array"
+            "name": "csvStr"
           },
           {
             "title": "param",
