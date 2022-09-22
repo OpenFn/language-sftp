@@ -6,7 +6,7 @@ import {
 import Client from 'ssh2-sftp-client';
 // import csv from 'csvtojson';
 import JSONStream from 'JSONStream';
-import csv from 'csv-parser';
+// import csv from 'csv-parser';
 
 /**
  * Execute a sequence of operations.
@@ -62,7 +62,7 @@ export function list(dirPath) {
 }
 
 /**
- * Get a CSV and convert it to JSON
+ * Get a CSV and returns a JSON array of strings for each item  separated by the delimiter
  * @public
  * @example
  * getCSV(
@@ -76,31 +76,22 @@ export function getCSV(filePath) {
   return state => {
     const sftp = new Client();
 
+    let results = [];
+
     return sftp
       .connect(state.configuration)
       .then(() => {
         process.stdout.write('Connected. ✓\n');
         return sftp.get(filePath);
       })
-      .then(stream => {
+      .then(chunk => {
+        results.push(chunk);
+      })
+      .then(() => {
         process.stdout.write('Parsing rows to JSON.\n');
-        let results = [];
-        stream.pipe(csv());
-
         return new Promise((resolve, reject) => {
-          stream
-            .on('readable', jsonObject => {
-              // while (null !== (jsonObject = stream.read())) {
-              //   results.push(jsonObject);
-              // }
-              stream.read();
-            })
-            .on('data', data => {
-              results.push(data);
-            })
-            .on('end', () => {
-              resolve(results.join('').split('\r\n'));
-            });
+          const content = Buffer.concat(results).toString('utf8');
+          resolve(content.split('\r\n'));
         }).then(json => {
           const nextState = composeNextState(state, json);
           return nextState;
@@ -221,6 +212,21 @@ export function getJSON(filePath, encoding) {
         throw e;
       });
   };
+}
+
+/**
+ * Convert JSON array of strings into a normalized object
+ * @public
+ * @example
+ * normalizeCSVarray([array],{ delimiter: ';', noheader: true });
+ * @constructor
+ * @param {array} array - Array of strings
+ * @param {options} options - Options passed to csvtojson parser
+ * @param {callback} callback - Options passed to csvtojson parser
+ * @returns {Operation}
+ */
+export function normalizeCSVarray(array, options, callback) {
+  return state => {};
 }
 
 export { _ } from 'lodash';
