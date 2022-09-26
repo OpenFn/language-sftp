@@ -4,7 +4,7 @@ import {
   composeNextState,
 } from '@openfn/language-common';
 import Client from 'ssh2-sftp-client';
-// import csv from 'csvtojson';
+import csv from 'csvtojson';
 import JSONStream from 'JSONStream';
 // import csv from 'csv-parser';
 
@@ -99,6 +99,7 @@ export function getCSV(filePath) {
       })
       .then(state => {
         console.log('Stream finished.');
+
         sftp.end();
         return state;
       })
@@ -218,15 +219,27 @@ export function getJSON(filePath, encoding) {
  * Convert JSON array of strings into a normalized object
  * @public
  * @example
- * normalizeCSVarray([array],{ delimiter: ';', noheader: true });
+ * normalizeCSVarray({ delimiter: ';', noheader: true });
  * @constructor
- * @param {array} array - Array of strings
  * @param {options} options - Options passed to csvtojson parser
  * @param {callback} callback - Options passed to csvtojson parser
  * @returns {Operation}
  */
-export function normalizeCSVarray(array, options, callback) {
-  return state => {};
+export function normalizeCSVarray(options, callback) {
+  return state => {
+    const headers = state.data
+      .shift()
+      .split(';')
+      .map(h => h == h.replace(/"/g, ''));
+
+    const values = state.data.split(';');
+
+    return Object.fromEntries(
+      headers.map((k, i) => {
+        return values[i] ? [k, values[i].replace(/"/g, '')] : [k, values[i]];
+      })
+    );
+  };
 }
 
 export { _ } from 'lodash';

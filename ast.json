@@ -209,7 +209,6 @@
     {
       "name": "normalizeCSVarray",
       "params": [
-        "array",
         "options",
         "callback"
       ],
@@ -223,22 +222,13 @@
           },
           {
             "title": "example",
-            "description": "normalizeCSVarray([array],{ delimiter: ';', noheader: true });"
+            "description": "normalizeCSVarray({ delimiter: ';', noheader: true });"
           },
           {
             "title": "constructor",
             "description": null,
             "type": null,
             "name": null
-          },
-          {
-            "title": "param",
-            "description": "Array of strings",
-            "type": {
-              "type": "NameExpression",
-              "name": "array"
-            },
-            "name": "array"
           },
           {
             "title": "param",
