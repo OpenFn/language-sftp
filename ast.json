@@ -15,7 +15,7 @@
           },
           {
             "title": "example",
-            "description": "list(\"/some/path/\")"
+            "description": "list('/some/path/')"
           },
           {
             "title": "constructor",
@@ -59,7 +59,7 @@
           },
           {
             "title": "example",
-            "description": "getCSV(\n  \"/some/path/to_file.csv\"\n);"
+            "description": "getCSV(\n  '/some/path/to_file.csv'\n);"
           },
           {
             "title": "constructor",
@@ -91,8 +91,8 @@
     {
       "name": "putCSV",
       "params": [
-        "filePath",
-        "encoding",
+        "localFilePath",
+        "remoteFilePath",
         "parsingOptions"
       ],
       "docs": {
@@ -105,7 +105,7 @@
           },
           {
             "title": "example",
-            "description": "putCSV(\n  \"/some/path/to_file.csv\",\n  'utf8',\n  { delimiter: ';', noheader: true }\n);"
+            "description": "putCSV(\n  '/some/path/to_local_file.csv',\n  '/some/path/to_remove_file.csv',\n  { delimiter: ';', noheader: true }\n);"
           },
           {
             "title": "constructor",
@@ -115,28 +115,28 @@
           },
           {
             "title": "param",
-            "description": "Path to resource",
+            "description": " Data source for data to copy to the remote server.",
             "type": {
               "type": "NameExpression",
               "name": "string"
             },
-            "name": "filePath"
+            "name": "localFilePath"
           },
           {
             "title": "param",
-            "description": "Character encoding for the csv",
+            "description": "Path to the remote file to be created on the server.",
             "type": {
               "type": "NameExpression",
               "name": "string"
             },
-            "name": "encoding"
+            "name": "remoteFilePath"
           },
           {
             "title": "param",
-            "description": "Options passed to csvtojson parser",
+            "description": "Options which can be passed to adjust the read and write stream used in sending the data to the remote server",
             "type": {
               "type": "NameExpression",
-              "name": "string"
+              "name": "object"
             },
             "name": "parsingOptions"
           },

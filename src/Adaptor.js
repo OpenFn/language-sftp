@@ -2,11 +2,15 @@
 import {
   execute as commonExecute,
   composeNextState,
+  chunk,
 } from '@openfn/language-common';
 import Client from 'ssh2-sftp-client';
 import csv from 'csvtojson';
-import JSONStream from 'JSONStream';
+import { stat } from 'fs';
+
+// import JSONStream from 'JSONStream';
 // import csv from 'csv-parser';
+const { Readable } = require('stream');
 
 /**
  * Execute a sequence of operations.
@@ -33,7 +37,7 @@ export function execute(...operations) {
  * List files present in a directory
  * @public
  * @example
- * list("/some/path/")
+ * list('/some/path/')
  * @constructor
  * @param {string} dirPath - Path to resource
  * @returns {Operation}
@@ -66,7 +70,7 @@ export function list(dirPath) {
  * @public
  * @example
  * getCSV(
- *   "/some/path/to_file.csv"
+ *   '/some/path/to_file.csv'
  * );
  * @constructor
  * @param {string} filePath - Path to resource
@@ -78,35 +82,52 @@ export function getCSV(filePath) {
 
     let results = [];
 
-    return sftp
-      .connect(state.configuration)
-      .then(() => {
-        process.stdout.write('Connected. ✓\n');
-        return sftp.get(filePath);
-      })
-      .then(chunk => {
-        results.push(chunk);
-      })
-      .then(() => {
-        process.stdout.write('Parsing rows to JSON.\n');
-        return new Promise((resolve, reject) => {
-          const content = Buffer.concat(results).toString('utf8');
-          resolve(content.split('\r\n'));
-        }).then(json => {
-          const nextState = composeNextState(state, json);
-          return nextState;
-        });
-      })
-      .then(state => {
-        console.log('Stream finished.');
-
-        sftp.end();
-        return state;
-      })
-      .catch(e => {
-        sftp.end();
-        throw e;
-      });
+    return (
+      sftp
+        .connect(state.configuration)
+        .then(() => {
+          process.stdout.write('Connected. ✓\n');
+          return sftp.get(filePath);
+        })
+        // TODO: @Taylor is there a good reason we don't want this ?
+        // The logic below convert the CSV to a JSON
+        // .then(chunk => {
+        //   return csv()
+        //     .fromStream(Readable.from(chunk))
+        //     .subscribe(json => {
+        //       results.push(json);
+        //     });
+        // })
+        // .then(json => {
+        //   const nextState = composeNextState(state, json);
+        //   return nextState;
+        // })
+        // .then(chunk => {
+        //   results.push(chunk);
+        // })
+        .then(chunk => {
+          results.push(chunk);
+        })
+        .then(() => {
+          process.stdout.write('Parsing rows to JSON.\n');
+          return new Promise((resolve, reject) => {
+            const content = Buffer.concat(results).toString('utf8');
+            resolve(content.split('\r\n'));
+          }).then(json => {
+            const nextState = composeNextState(state, json);
+            return nextState;
+          });
+        })
+        .then(state => {
+          console.log('Stream finished.');
+          sftp.end();
+          return state;
+        })
+        .catch(e => {
+          sftp.end();
+          throw e;
+        })
+    );
   };
 }
 
@@ -115,36 +136,36 @@ export function getCSV(filePath) {
  * @public
  * @example
  * putCSV(
- *   "/some/path/to_file.csv",
- *   'utf8',
+ *   '/some/path/to_local_file.csv',
+ *   '/some/path/to_remove_file.csv',
  *   { delimiter: ';', noheader: true }
  * );
  * @constructor
- * @param {string} filePath - Path to resource
- * @param {string} encoding - Character encoding for the csv
- * @param {string} parsingOptions - Options passed to csvtojson parser
+ * @param {string} localFilePath -  Data source for data to copy to the remote server.
+ * @param {string} remoteFilePath - Path to the remote file to be created on the server.
+ * @param {object} parsingOptions - Options which can be passed to adjust the read and write stream used in sending the data to the remote server
  * @returns {Operation}
  */
-export function putCSV(filePath, encoding, parsingOptions) {
+export function putCSV(localFilePath, remoteFilePath, parsingOptions) {
   return state => {
-    const json2csv = require('json2csv').parse;
-    const fields = ['field1', 'field2', 'field3'];
-    const opts = { fields };
+    const sftp = new Client();
 
-    try {
-      const csv = json2csv(myData, opts);
-      console.log(csv);
-    } catch (err) {
-      console.error(err);
-    }
-
-    sftp.put(
-      localFilePath,
-      remoteFilePath,
-      [useCompression],
-      [encoding],
-      [addtionalOptions]
-    );
+    return sftp.connect(state.configuration).then(() => {
+      return sftp
+        .put(localFilePath, remoteFilePath, parsingOptions)
+        .then(res => {
+          const nextState = composeNextState(state, res);
+          return nextState;
+        })
+        .then(state => {
+          console.log('Upload finished.');
+          sftp.end();
+          return state;
+        })
+        .catch(e => {
+          throw e;
+        });
+    });
   };
 }
 
@@ -165,12 +186,7 @@ export function getJSON(filePath, encoding) {
   return state => {
     const sftp = new Client();
 
-    /* const outStream = new Writable({
-      write: (chunk, encoding, callback) => {
-        // console.log(chunk.toString());
-        callback();
-      },
-    }); */
+    let results = [];
 
     return sftp
       .connect(state.configuration)
@@ -178,27 +194,16 @@ export function getJSON(filePath, encoding) {
         process.stdout.write('Connected. ✓\n');
         return sftp.get(filePath);
       })
-      .then(stream => {
-        // stream.pipe(outStream);
-        stream.pipe(JSONStream.parse());
-        let arr = [];
+
+      .then(chunk => {
+        results.push(chunk);
+      })
+      .then(() => {
         process.stdout.write('Receiving stream.\n');
 
         return new Promise((resolve, reject) => {
-          console.log(`Reading file ${filePath}...`);
-          stream
-            .on('readable', jsonObject => {
-              while (null !== (jsonObject = stream.read())) {
-                arr.push(jsonObject);
-              }
-            })
-            .on('data', jsonObject => {
-              // console.log(`chunk length is: ${jsonObject.length}`);
-            })
-            .on('end', error => {
-              if (error) reject(error);
-              resolve(arr.join(''));
-            });
+          const content = Buffer.concat(results).toString('utf8');
+          resolve(content.split('\r\n'));
         }).then(json => {
           const nextState = composeNextState(state, json);
           return nextState;
@@ -227,18 +232,36 @@ export function getJSON(filePath, encoding) {
  */
 export function normalizeCSVarray(options, callback) {
   return state => {
-    const headers = state.data
-      .shift()
-      .split(';')
-      .map(h => h == h.replace(/"/g, ''));
+    let results = [];
 
-    const values = state.data.split(';');
+    state.data.map(data => {
+      const [keys, ...rest] = state.data
+        .shift()
+        .split('\n')
+        .map(h => (h = h.replace(/"/g, '')));
 
-    return Object.fromEntries(
-      headers.map((k, i) => {
-        return values[i] ? [k, values[i].replace(/"/g, '')] : [k, values[i]];
-      })
-    );
+      results.push(keys);
+    });
+
+    const headers = results[0]
+      .trim()
+      .split('\n')
+      .map(item => item.split(','))
+      .flat();
+
+    const values = results[1]
+      .trim()
+      .split('\n')
+      .map(item => item.split(','))
+      .flat();
+
+    const normalizedArray = values.map(item => {
+      const object = {};
+      headers.forEach((key, index) => (object[key] = item.at(index)));
+      return object;
+    });
+
+    return { ...state, normalizedArray };
   };
 }
 
