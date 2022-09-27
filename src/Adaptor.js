@@ -66,7 +66,7 @@ export function list(dirPath) {
 }
 
 /**
- * Get a CSV and returns a JSON array of strings for each item  separated by the delimiter
+ * Get a CSV and return a JSON array of strings for each item separated by the delimiter
  * @public
  * @example
  * getCSV(

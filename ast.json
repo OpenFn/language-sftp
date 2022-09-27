@@ -50,7 +50,7 @@
         "filePath"
       ],
       "docs": {
-        "description": "Get a CSV and returns a JSON array of strings for each item  separated by the delimiter",
+        "description": "Get a CSV and return a JSON array of strings for each item separated by the delimiter",
         "tags": [
           {
             "title": "public",
